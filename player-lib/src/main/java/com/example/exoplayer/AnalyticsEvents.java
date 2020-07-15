@@ -31,11 +31,10 @@ public class AnalyticsEvents implements AnalyticsListener {
         textView.setText("Counter, Width, Height: " + counter + "," + width + ", " + height);
 
     }
-   public void onBandwidthMeasure(
-           EventTime eventTime,
-           int estimatetime){
-        Log.d(TAG, "Bandwidth:" + eventTime + "estimatetime:" + estimatetime);
-        textView.setText("Bandwidth" + eventTime);
+    @Override
+    public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
+        Log.d(TAG, "ANALYTICS BANDWIDTH EVENT:"  + eventTime + "elapsedMs:" + totalLoadTimeMs + "Bytes:" +totalBytesLoaded +"Bitrate:" + bitrateEstimate);
+        textView.setText("Bandwidth,Bitrate,Bytes:" + (bitrateEstimate/1024) + "," + bitrateEstimate + "," + totalBytesLoaded);
 
    }
 

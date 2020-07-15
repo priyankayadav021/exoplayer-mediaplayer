@@ -10,6 +10,8 @@ import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.decoder.DecoderCounters;
 import com.google.android.exoplayer2.util.Assertions;
 
+import java.util.Locale;
+
 public class AnalyticsTextViewHelper implements AnalyticsListener, Runnable {
 
     private static final int REFRESH_INTERVAL_MS = 1000;
@@ -17,6 +19,8 @@ public class AnalyticsTextViewHelper implements AnalyticsListener, Runnable {
     private final SimpleExoPlayer player;
     private final TextView textView;
     private boolean started;
+    private int currentCounter=0;
+    private long currentBandwidth;
 
     public AnalyticsTextViewHelper(SimpleExoPlayer player, TextView textView) {
         Assertions.checkArgument(player.getApplicationLooper() == Looper.getMainLooper());
@@ -47,7 +51,6 @@ public class AnalyticsTextViewHelper implements AnalyticsListener, Runnable {
     protected String getDebugString() {
         return getPlayerStateString() + getVideoString() + getAudioString();
     }
-
     protected String getAudioString() {
         Format format = player.getAudioFormat();
         DecoderCounters decoderCounters = player.getAudioDecoderCounters();
@@ -62,6 +65,7 @@ public class AnalyticsTextViewHelper implements AnalyticsListener, Runnable {
                 + format.sampleRate
                 + " ch:"
                 + format.channelCount
+                + getDecoderCountersBufferCountString(decoderCounters)
                 + ")";
     }
 
@@ -79,10 +83,28 @@ public class AnalyticsTextViewHelper implements AnalyticsListener, Runnable {
                 + format.width
                 + "x"
                 + format.height
+                + getPixelAspectRatioString(format.pixelWidthHeightRatio)
+                + getDecoderCountersBufferCountString(decoderCounters)
                 + ")";
     }
 
+    @Override
+    public void onVideoSizeChanged(
+            EventTime eventTime,
+            int width,
+            int height,
+            int unappliedRotationDegrees,
+            float pixelWidthHeightRatio) {
 
+
+        currentCounter++;
+    }
+
+    @Override
+    public void onBandwidthEstimate(
+            EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
+        currentBandwidth = bitrateEstimate / 1024;
+    }
 
     protected String getPlayerStateString() {
         String playbackStateString;
@@ -116,4 +138,22 @@ public class AnalyticsTextViewHelper implements AnalyticsListener, Runnable {
         player.removeAnalyticsListener(this);
         textView.removeCallbacks(this);
     }
+    private static String getDecoderCountersBufferCountString(DecoderCounters counters) {
+        if (counters == null) {
+            return "";
+        }
+        counters.ensureUpdated();
+        return " sib:" + counters.skippedInputBufferCount
+                + " sb:" + counters.skippedOutputBufferCount
+                + " rb:" + counters.renderedOutputBufferCount
+                + " db:" + counters.droppedBufferCount
+                + " mcdb:" + counters.maxConsecutiveDroppedBufferCount
+                + " dk:" + counters.droppedToKeyframeCount;
+    }
+
+    private static String getPixelAspectRatioString(float pixelAspectRatio) {
+        return pixelAspectRatio == Format.NO_VALUE || pixelAspectRatio == 1f ? ""
+                : (" par:" + String.format(Locale.US, "%.02f", pixelAspectRatio));
+    }
+
 }
