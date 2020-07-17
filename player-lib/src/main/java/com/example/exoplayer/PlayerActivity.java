@@ -17,9 +17,12 @@ package com.example.exoplayer;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +31,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -66,7 +70,6 @@ public class PlayerActivity extends AppCompatActivity {
     setContentView(R.layout.activity_player);
     playbackStateListener = new PlaybackStateListener();
     playerView = findViewById(R.id.video_view);
-
     titleTextView = findViewById(R.id.title_text_view);
     debugTextView = findViewById(R.id.debug_text_view);
 
@@ -116,8 +119,8 @@ public class PlayerActivity extends AppCompatActivity {
 
       playerView.setPlayer(player);
       Uri uri = Uri.parse(getString(R.string.media_url_dash));
-      //Uri uri1 = Uri.parse(getString(R.string.media_url_hls));
-      MediaSource mediaSource = buildMediaSourceDash(uri);
+      Uri uri1 = Uri.parse(getString(R.string.media_url_hls));
+      MediaSource mediaSource = buildMediaSourceDash(uri,uri1);
       //MediaSource mediaSourcehls = buildMediaSourceHls(uri1);
       player.setPlayWhenReady(playWhenReady);
       player.seekTo(currentWindow, playbackPosition);
@@ -133,14 +136,16 @@ public class PlayerActivity extends AppCompatActivity {
 
   }
 
-  private MediaSource buildMediaSourceDash(Uri uri) {
+  private MediaSource buildMediaSourceDash(Uri uri, Uri uri1) {
     DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, "exoplayer-codelab");
     DashMediaSource.Factory mediaSourceFactory = new DashMediaSource.Factory(dataSourceFactory);
-    // MediaSource mediaSource1 = mediaSourceFactory.createMediaSource(uri);
-    // Uri audioUri = Uri.parse(getString(R.string.media_url_mp3));
-    // MediaSource mediaSource = mediaSoureFactory.createMediaSource(audioUri));
-    // return new ConcatenatingMediaSource(mediaSource1.mediaSource2);
-    return mediaSourceFactory.createMediaSource(uri);
+    HlsMediaSource.Factory mediaSourceFactory1 = new HlsMediaSource.Factory(dataSourceFactory);
+    MediaSource mediaSource01 = mediaSourceFactory.createMediaSource(uri);
+    Uri audioUri = Uri.parse(getString(R.string.media_url_mp3));
+    MediaSource mediaSource02=  mediaSourceFactory1.createMediaSource(audioUri);
+    MediaSource mediaSource03 =  mediaSourceFactory1.createMediaSource(uri1);
+    return new ConcatenatingMediaSource(mediaSource01,mediaSource02,mediaSource03);
+    //return mediaSourceFactory.createMediaSource(uri);
   }
     //private MediaSource buildMediaSourceHls(Uri uri1) {
        // DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, "exoplayer-codelab");
